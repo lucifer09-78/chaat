@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Nebula Chat</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b6cee",
+                        "primary-dark": "#1a4fb0",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#050505",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "glass-surface": "rgba(20, 25, 40, 0.6)",
+                        "glass-highlight": "rgba(255, 255, 255, 0.03)",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px" },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'blob-delayed': 'blob 7s infinite 2s',
+                        'blob-reverse': 'blob-reverse 10s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        'blob-reverse': {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(-30px, 50px) scale(1.1)' },
+                            '66%': { transform: 'translate(20px, -20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom Utilities */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+        }
+
+        .glass-panel {
+            background: rgba(17, 25, 40, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(15, 17, 21, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .glass-input:focus {
+            background: rgba(15, 17, 21, 0.9);
+            border-color: #2b6cee;
+            box-shadow: 0 0 15px rgba(43, 108, 238, 0.2);
+        }
+
+        .liquid-button {
+            background: linear-gradient(45deg, #2b6cee, #9D4EDD, #00FFFF, #2b6cee);
+            background-size: 300% 300%;
+            animation: liquid-gradient 8s ease infinite;
+        }
+
+        @keyframes liquid-gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .message-incoming {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+        }
+
+        .message-outgoing {
+            background: linear-gradient(135deg, #2b6cee 0%, #1a4fb0 100%);
+            box-shadow: 0 4px 15px rgba(43, 108, 238, 0.3);
+        }
+
+        .ambient-light {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .light-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(43, 108, 238, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+
+        .light-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(120, 43, 238, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            animation-delay: -5s;
+        }
+
+        .light-3 {
+            top: 40%;
+            left: 40%;
+            width: 30vw;
+            height: 30vw;
+            background: radial-gradient(circle, rgba(43, 238, 215, 0.05) 0%, rgba(0, 0, 0, 0) 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-dark text-slate-200 font-display h-screen overflow-hidden selection:bg-primary selection:text-white relative">
+
+    <!-- Ambient Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="ambient-light light-1"></div>
+        <div class="ambient-light light-2"></div>
+        <div class="ambient-light light-3"></div>
+        <!-- Subtle Grid Overlay -->
+        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03]"></div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-container" class="relative z-10 flex min-h-screen w-full flex-col items-center justify-center p-4">
+        <div
+            class="glass-card w-full max-w-[440px] rounded-2xl p-8 sm:p-10 flex flex-col gap-6 relative overflow-hidden group">
+            <div
+                class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent">
+            </div>
+
+            <div class="flex flex-col items-center gap-2 text-center mb-2">
+                <div
+                    class="relative w-16 h-16 mb-2 flex items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 shadow-inner">
+                    <span
+                        class="material-symbols-outlined text-4xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">stream</span>
+                    <div class="absolute inset-0 rounded-xl bg-primary/20 blur-xl -z-10 animate-pulse-slow"></div>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight text-white drop-shadow-sm">Nexus Chat</h1>
+                <p class="text-slate-400 text-sm font-medium">Secure access to the neural stream</p>
+            </div>
+
+            <div class="flex flex-col gap-5 w-full">
+                <div class="flex flex-col gap-2 group/input">
+                    <label class="text-slate-300 text-xs font-bold uppercase tracking-wider pl-1">Username</label>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within/input:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
+                        </div>
+                        <input id="login-username"
+                            class="glass-input w-full rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-slate-500 outline-none focus:ring-0 text-sm font-medium"
+                            placeholder="Enter your Username" type="text" />
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 group/input">
+                    <label class="text-slate-300 text-xs font-bold uppercase tracking-wider pl-1">Password</label>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within/input:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">lock</span>
+                        </div>
+                        <input id="login-password"
+                            class="glass-input w-full rounded-xl py-3.5 pl-11 pr-4 text-white placeholder-slate-500 outline-none focus:ring-0 text-sm font-medium"
+                            placeholder="Enter your Password" type="password" />
+                    </div>
+                </div>
+
+                <button onclick="login()"
+                    class="liquid-button relative mt-4 w-full h-12 rounded-xl text-white font-bold text-base tracking-wide shadow-[0_0_20px_rgba(43,108,238,0.3)] hover:shadow-[0_0_30px_rgba(43,108,238,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 overflow-hidden group/btn"
+                    type="button">
+                    <span class="relative z-10 flex items-center justify-center gap-2">
+                        Get Started
+                        <span
+                            class="material-symbols-outlined text-lg group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                    </span>
+                    <div class="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                    </div>
+                </button>
+
+                <button onclick="register()"
+                    class="w-full text-slate-400 hover:text-white transition-colors text-sm">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-container"
+        class="hidden relative z-10 flex h-full w-full max-w-[1920px] mx-auto p-2 md:p-4 gap-4">
+
+        <!-- Left Sidebar: Direct Messages / Groups -->
+        <nav class="flex w-20 lg:w-72 flex-col glass-panel rounded-2xl h-full transition-all duration-300">
+            <!-- Header -->
+            <div class="h-20 flex items-center px-6 border-b border-glass-border">
+                <div class="flex items-center gap-3 text-white">
+                    <div class="size-8 text-primary shrink-0">
+                        <span class="material-symbols-outlined text-3xl">bubble_chart</span>
+                    </div>
+                    <h1 class="font-bold text-xl tracking-tight hidden lg:block">Nebula</h1>
+                </div>
+            </div>
+
+            <!-- Search Users Add Friend -->
+            <div class="p-4 border-b border-glass-border">
+                <div class="relative">
+                    <input id="search-input" class="glass-input w-full rounded-xl py-2 pl-3 pr-10 text-white text-sm"
+                        placeholder="Search user to add..." type="text" />
+                    <button onclick="searchAndAdd()" class="absolute right-2 top-2 text-slate-400 hover:text-white">
+                        <span class="material-symbols-outlined text-[18px]">person_add</span>
+                    </button>
+                </div>
+                <div id="search-results" class="mt-2 space-y-2"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+                <!-- Pending Requests -->
+                <div id="pending-requests-container" class="hidden">
+                    <div class="px-3 pb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">Pending Requests
+                    </div>
+                    <div id="pending-list" class="space-y-1"></div>
+                </div>
+
+                <!-- Groups -->
+                <div
+                    class="px-3 pb-2 pt-2 text-xs font-medium text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                    <span>Groups</span>
+                    <button onclick="showCreateGroupModal()" class="text-primary hover:text-white"><span
+                            class="material-symbols-outlined text-[16px]">add</span></button>
+                </div>
+                <div id="groups-list" class="space-y-1"></div>
+
+                <!-- Direct Messages -->
+                <div class="px-3 pt-6 pb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">Direct Messages
+                </div>
+                <div id="friends-list" class="space-y-1"></div>
+            </div>
+
+            <!-- User Profile Bottom -->
+            <div class="p-4 border-t border-glass-border">
+                <div class="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-glass-highlight transition-colors">
+                    <div
+                        class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 p-[1px] flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white">person</span>
+                    </div>
+                    <div class="hidden lg:block text-left">
+                        <p id="current-username-display" class="text-sm font-bold text-white leading-none">User</p>
+                        <p class="text-xs text-slate-400 leading-none mt-1">Online</p>
+                    </div>
+                    <button onclick="location.reload()" class="ml-auto text-slate-400 hover:text-white"><span
+                            class="material-symbols-outlined">logout</span></button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Center Chat Area -->
+        <main class="flex-1 flex flex-col glass-panel rounded-2xl h-full overflow-hidden relative">
+            <!-- Chat Header -->
+            <header
+                class="h-20 shrink-0 px-6 flex items-center justify-between border-b border-glass-border backdrop-blur-md z-20">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                        <span id="chat-header-icon" class="material-symbols-outlined">forum</span>
+                    </div>
+                    <div>
+                        <h2 id="chat-header-title" class="text-lg font-bold text-white leading-tight">Select a chat</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 status-dot"></span>
+                            <span class="text-xs text-slate-400 font-medium">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Messages Stream -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+                <!-- Messages will be injected here -->
+                <div class="flex items-center justify-center h-full text-slate-500">
+                    Select a friend or group to start chatting
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 pt-2">
+                <div class="glass-input rounded-2xl flex items-end gap-2 p-2 relative shadow-lg">
+                    <div class="flex-1 py-2.5">
+                        <textarea id="message-input"
+                            class="w-full bg-transparent border-0 text-white placeholder-slate-500 focus:ring-0 p-0 text-sm resize-none max-h-32"
+                            placeholder="Type a message..." rows="1"></textarea>
+                    </div>
+                    <div class="flex items-center gap-1 pb-1">
+                        <button onclick="sendMessage()"
+                            class="ml-1 p-2 bg-primary hover:bg-primary-dark text-white rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95">
+                            <span class="material-symbols-outlined text-[20px] fill-current">send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Group Modal (Simple Prompt replacement) -->
+    <div id="create-group-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="glass-card p-6 rounded-2xl w-96">
+            <h3 class="text-lg font-bold text-white mb-4">Create New Group</h3>
+            <input id="new-group-name" class="glass-input w-full rounded-xl py-2 px-3 text-white mb-4"
+                placeholder="Group Name" />
+            <div class="flex justify-end gap-2">
+                <button onclick="$('#create-group-modal').addClass('hidden')"
+                    class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button onclick="submitCreateGroup()" class="px-4 py-2 bg-primary text-white rounded-xl">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="add-member-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="glass-card p-6 rounded-2xl w-96">
+            <h3 class="text-lg font-bold text-white mb-4">Add Member to Group</h3>
+            <input id="add-member-id" class="glass-input w-full rounded-xl py-2 px-3 text-white mb-4"
+                placeholder="User ID to add" />
+            <div class="flex justify-end gap-2">
+                <button onclick="$('#add-member-modal').addClass('hidden')"
+                    class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button onclick="submitAddMember()" class="px-4 py-2 bg-primary text-white rounded-xl">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: social-messaging-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/social_messaging
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=keerat78
+    depends_on:
+      - db
+    networks:
+      - social-net
+
+  db:
+    image: postgres:15-alpine
+    container_name: social-messaging-db
+    environment:
+      - POSTGRES_DB=social_messaging
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=keerat78
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - social-net
+
+networks:
+  social-net:
+    driver: bridge
+
+volumes:
+  db-data:
