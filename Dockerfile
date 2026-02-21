@@ -6,8 +6,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run the application
+# Cache bust: v3
 FROM amazoncorretto:17-alpine-jdk
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+EXPOSE 10000
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-Dspring.profiles.active=prod", "-jar", "/app/app.jar"]
