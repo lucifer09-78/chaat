@@ -5,29 +5,29 @@ const MessageStatusIcon = ({ status }) => {
     // Blue double tick
     return (
       <svg width="16" height="11" viewBox="0 0 16 11" fill="none" className="inline-block ml-1">
-        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb"/>
-        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb"/>
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb" />
+        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb" />
       </svg>
     );
   } else if (status === 'delivered') {
     // Gray double tick
     return (
       <svg width="16" height="11" viewBox="0 0 16 11" fill="none" className="inline-block ml-1">
-        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
-        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0" />
+        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0" />
       </svg>
     );
   } else {
     // Gray single tick (sent)
     return (
       <svg width="12" height="11" viewBox="0 0 12 11" fill="none" className="inline-block ml-1">
-        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-5.48 5.48-2.06-2.061a.75.75 0 0 0-1.06 1.06l2.59 2.591a.75.75 0 0 0 1.06 0l6.01-6.01a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-5.48 5.48-2.06-2.061a.75.75 0 0 0-1.06 1.06l2.59 2.591a.75.75 0 0 0 1.06 0l6.01-6.01a.75.75 0 0 0 0-1.06z" fill="#8696a0" />
       </svg>
     );
   }
 };
 
-export default function PrivateChat({ friend, messages, onSendMessage, currentUserId }) {
+export default function PrivateChat({ friend, messages, onSendMessage, currentUserId, onBack }) {
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -49,7 +49,7 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
 
   const formatLastSeen = (lastSeenStr) => {
     if (!lastSeenStr) return 'long ago';
-    
+
     const lastSeen = new Date(lastSeenStr);
     const now = new Date();
     const diffMs = now - lastSeen;
@@ -66,40 +66,47 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
 
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     const date = new Date(timestamp);
     const now = new Date();
     const diffDays = Math.floor((now - date) / 86400000);
-    
+
     // If today, show time only
     if (diffDays === 0) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    
+
     // If yesterday
     if (diffDays === 1) {
       return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
-    
+
     // If within a week, show day name
     if (diffDays < 7) {
       return `${date.toLocaleDateString([], { weekday: 'short' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
-    
+
     // Otherwise show full date
-    return date.toLocaleString([], { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   return (
-    <main className="flex-1 flex flex-col relative min-w-0">
+    <main className="flex-1 flex flex-col relative min-w-0 h-full">
       {/* Chat Header */}
-      <header className="h-20 glass-panel border-b border-white/5 flex items-center justify-between px-8 z-20">
-        <div className="flex items-center gap-4">
+      <header className="h-16 md:h-20 glass-panel border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Mobile back button */}
+          <button
+            onClick={onBack}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+          </button>
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)]">
               {friend.username.charAt(0).toUpperCase()}
@@ -129,7 +136,7 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-6 relative">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6 relative">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-slate-500">No messages yet. Start the conversation!</p>
@@ -140,7 +147,7 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
             return (
               <div
                 key={index}
-                className={`flex gap-4 max-w-[80%] ${isOwn ? 'ml-auto justify-end' : ''}`}
+                className={`flex gap-2 md:gap-4 max-w-[85%] md:max-w-[80%] ${isOwn ? 'ml-auto justify-end' : ''}`}
               >
                 {!isOwn && (
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold text-sm self-end mb-1">
@@ -149,11 +156,10 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
                 )}
                 <div className={`flex flex-col gap-1 ${isOwn ? 'items-end' : ''}`}>
                   <div
-                    className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                      isOwn
+                    className={`p-4 rounded-2xl text-sm leading-relaxed ${isOwn
                         ? 'bg-primary/90 text-white rounded-br-none shadow-[0_4px_20px_rgba(43,108,238,0.3)]'
                         : 'glass-card text-slate-200 rounded-bl-none'
-                    }`}
+                      }`}
                   >
                     {msg.content}
                   </div>
@@ -170,7 +176,7 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
       </div>
 
       {/* Input Area */}
-      <div className="p-6 pt-2">
+      <div className="p-3 md:p-6 pt-2 flex-shrink-0">
         <form onSubmit={handleSubmit} className="glass-input rounded-full p-2 pl-6 flex items-center gap-4 shadow-lg">
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-slate-400 font-medium"

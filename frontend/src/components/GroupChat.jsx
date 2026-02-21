@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export default function GroupChat({ group, messages, onSendMessage, currentUserId }) {
+export default function GroupChat({ group, messages, onSendMessage, currentUserId, onBack }) {
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -22,40 +22,47 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
 
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     const date = new Date(timestamp);
     const now = new Date();
     const diffDays = Math.floor((now - date) / 86400000);
-    
+
     // If today, show time only
     if (diffDays === 0) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    
+
     // If yesterday
     if (diffDays === 1) {
       return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
-    
+
     // If within a week, show day name
     if (diffDays < 7) {
       return `${date.toLocaleDateString([], { weekday: 'short' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
-    
+
     // Otherwise show full date
-    return date.toLocaleString([], { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   return (
     <main className="flex-1 flex flex-col glass-panel rounded-2xl h-full overflow-hidden relative">
       {/* Chat Header */}
-      <header className="h-20 shrink-0 px-6 flex items-center justify-between border-b border-glass-border backdrop-blur-md z-20">
-        <div className="flex items-center gap-4">
+      <header className="h-16 md:h-20 shrink-0 px-4 md:px-6 flex items-center justify-between border-b border-glass-border backdrop-blur-md z-20">
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Mobile back button */}
+          <button
+            onClick={onBack}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+          </button>
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined">groups</span>
           </div>
@@ -70,7 +77,7 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
       </header>
 
       {/* Chat Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col-reverse scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 flex flex-col-reverse scroll-smooth">
         <div ref={messagesEndRef} />
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -96,11 +103,10 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
                     </div>
                   )}
                   <div
-                    className={`px-5 py-3 rounded-2xl text-sm leading-relaxed ${
-                      isOwn
+                    className={`px-5 py-3 rounded-2xl text-sm leading-relaxed ${isOwn
                         ? 'bg-primary hover:bg-primary-dark text-white rounded-br-sm shadow-lg shadow-primary/20 transition-all'
                         : 'message-incoming text-slate-200 rounded-bl-sm'
-                    }`}
+                      }`}
                   >
                     <p>{msg.content}</p>
                   </div>
@@ -115,7 +121,7 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
       </div>
 
       {/* Input Area */}
-      <div className="p-4 pt-2">
+      <div className="p-2 md:p-4 pt-2 flex-shrink-0">
         <form onSubmit={handleSubmit} className="glass-input rounded-2xl flex items-end gap-2 p-2 relative shadow-lg">
           <div className="flex-1 py-2.5 px-2">
             <input

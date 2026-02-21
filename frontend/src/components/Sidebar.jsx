@@ -12,7 +12,7 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
 
   const formatLastSeen = (lastSeenStr) => {
     if (!lastSeenStr) return 'long ago';
-    
+
     const lastSeen = new Date(lastSeenStr);
     const now = new Date();
     const diffMs = now - lastSeen;
@@ -28,7 +28,7 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
   };
 
   return (
-    <aside className="w-80 flex flex-col glass-panel border-r border-white/5 flex-shrink-0">
+    <aside className="w-full flex flex-col glass-panel border-r border-white/5 flex-shrink-0">
       {/* Header */}
       <div className="p-6 pb-2">
         <div className="flex items-center gap-3 text-white mb-6">
@@ -62,11 +62,10 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
           <div
             key={friend.id}
             onClick={() => onChatSelect(friend, 'private')}
-            className={`group flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all border ${
-              activeChat?.id === friend.id
+            className={`group flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all border ${activeChat?.id === friend.id
                 ? 'glass-card border-primary/30 bg-primary/10'
                 : 'hover:bg-white/5 border-transparent hover:border-white/5'
-            }`}
+              }`}
           >
             <div className="relative">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold">
@@ -98,11 +97,10 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
           <div
             key={group.id}
             onClick={() => onChatSelect(group, 'group')}
-            className={`group flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all border ${
-              activeChat?.id === group.id
+            className={`group flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all border ${activeChat?.id === group.id
                 ? 'glass-card border-primary/30 bg-primary/10'
                 : 'hover:bg-white/5 border-transparent hover:border-white/5'
-            }`}
+              }`}
           >
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
               <span className="material-symbols-outlined">groups</span>
