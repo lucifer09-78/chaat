@@ -130,12 +130,33 @@ export default function Chat() {
     }
   };
 
-  const handleSendMessage = (content) => {
+  const handleSendMessage = (content, replyTo) => {
     if (chatType === 'private') {
-      websocketService.sendPrivateMessage(user.username, activeChat.username, content);
+      websocketService.sendPrivateMessage(user.username, activeChat.username, content, replyTo);
     } else if (chatType === 'group') {
-      websocketService.sendGroupMessage(user.username, activeChat.id, content);
+      websocketService.sendGroupMessage(user.username, activeChat.id, content, replyTo);
     }
+  };
+
+  const handleMessageEdit = (updatedMsg) => {
+    // Update the message in local state by id
+    setMessages(prev => {
+      const updated = {};
+      for (const key of Object.keys(prev)) {
+        updated[key] = prev[key].map(m => m.id === updatedMsg.id ? updatedMsg : m);
+      }
+      return updated;
+    });
+  };
+
+  const handleMessageDelete = (msgId) => {
+    setMessages(prev => {
+      const updated = {};
+      for (const key of Object.keys(prev)) {
+        updated[key] = prev[key].filter(m => m.id !== msgId);
+      }
+      return updated;
+    });
   };
 
   const handleBackToSidebar = () => setShowChatPanel(false);
@@ -172,7 +193,10 @@ export default function Chat() {
                 messages={messages[`private_${activeChat.id}`] || []}
                 onSendMessage={handleSendMessage}
                 currentUserId={user.id}
+                currentUsername={user.username}
                 onBack={handleBackToSidebar}
+                onMessageEdit={handleMessageEdit}
+                onMessageDelete={handleMessageDelete}
               />
             ) : (
               <GroupChat
@@ -180,7 +204,10 @@ export default function Chat() {
                 messages={messages[`group_${activeChat.id}`] || []}
                 onSendMessage={handleSendMessage}
                 currentUserId={user.id}
+                currentUsername={user.username}
                 onBack={handleBackToSidebar}
+                onMessageEdit={handleMessageEdit}
+                onMessageDelete={handleMessageDelete}
               />
             )
           ) : (

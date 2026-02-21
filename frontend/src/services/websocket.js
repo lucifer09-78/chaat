@@ -42,6 +42,12 @@ class WebSocketService {
         console.log('Received private message:', receivedMessage);
         onMessageReceived(receivedMessage, 'private');
       });
+
+      // Subscribe to typing notifications
+      this.client.subscribe(`/user/queue/typing`, (message) => {
+        const event = JSON.parse(message.body);
+        if (this.onTypingReceived) this.onTypingReceived(event);
+      });
     };
 
     this.client.onStompError = (frame) => {
@@ -64,18 +70,43 @@ class WebSocketService {
         const receivedMessage = JSON.parse(message.body);
         onMessageReceived(receivedMessage, 'group');
       });
+      // Group typing
+      this.client.subscribe(`/topic/typing/group/${groupId}`, (message) => {
+        const event = JSON.parse(message.body);
+        if (this.onTypingReceived) this.onTypingReceived(event);
+      });
     }
   }
 
-  sendPrivateMessage(senderUsername, receiverUsername, content) {
+  setTypingHandler(handler) {
+    this.onTypingReceived = handler;
+  }
+
+  sendTyping(senderUsername, receiverUsername, groupId, isTyping) {
     if (this.client && this.connected) {
-      console.log('Sending private message:', { senderUsername, receiverUsername, content });
+      this.client.publish({
+        destination: '/app/typing',
+        body: JSON.stringify({
+          sender: senderUsername,
+          receiver: receiverUsername || '',
+          groupId: groupId ? String(groupId) : '',
+          typing: String(isTyping),
+        }),
+      });
+    }
+  }
+
+  sendPrivateMessage(senderUsername, receiverUsername, content, replyTo) {
+    if (this.client && this.connected) {
       this.client.publish({
         destination: '/app/private.send',
         body: JSON.stringify({
           sender: senderUsername,
           receiver: receiverUsername,
           content,
+          replyToId: replyTo?.id ? String(replyTo.id) : '',
+          replyPreview: replyTo?.content ? replyTo.content.substring(0, 80) : '',
+          replySenderName: replyTo?.senderName || '',
         }),
       });
     } else {
@@ -83,7 +114,7 @@ class WebSocketService {
     }
   }
 
-  sendGroupMessage(senderUsername, groupId, content) {
+  sendGroupMessage(senderUsername, groupId, content, replyTo) {
     if (this.client && this.connected) {
       this.client.publish({
         destination: '/app/group.send',
@@ -91,6 +122,9 @@ class WebSocketService {
           sender: senderUsername,
           groupId,
           content,
+          replyToId: replyTo?.id ? String(replyTo.id) : '',
+          replyPreview: replyTo?.content ? replyTo.content.substring(0, 80) : '',
+          replySenderName: replyTo?.senderName || '',
         }),
       });
     }

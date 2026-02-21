@@ -95,6 +95,12 @@ export const messageAPI = {
 
   markAllAsRead: (userId, senderId) =>
     api.put('/messages/read-all', null, { params: { userId, senderId } }),
+
+  editMessage: (messageId, content) =>
+    api.put(`/messages/edit/${messageId}`, { content }),
+
+  deleteMessage: (messageId) =>
+    api.delete(`/messages/${messageId}`),
 };
 
 export default api;

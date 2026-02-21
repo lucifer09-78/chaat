@@ -36,8 +36,21 @@ public class Message {
     private LocalDateTime timestamp;
 
     private LocalDateTime deliveredAt;
-    
+
     private LocalDateTime readAt;
+
+    @Column(name = "reply_to_id")
+    private Long replyToId;             // ID of the message being replied to
+
+    @Column(name = "reply_preview")
+    private String replyPreview;        // Short preview of the quoted message
+
+    @Column(name = "reply_sender_name")
+    private String replySenderName;     // Username of the person who sent the quoted msg
+
+    private boolean edited = false;     // Was this message edited?
+
+    private LocalDateTime editedAt;
 
     public Message(User sender, User receiver, String content) {
         this.sender = sender;
