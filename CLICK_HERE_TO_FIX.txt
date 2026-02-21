@@ -1,71 +1,54 @@
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║                  🚨 CORS ERROR DETECTED 🚨                  ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
+========================================
+FIX YOUR RENDER DEPLOYMENT
+========================================
 
-ERROR MESSAGE:
-"blocked by CORS policy: Response to preflight request doesn't 
-pass access control check"
+The compilation error you saw is already fixed in the code.
+You just need to force Render to rebuild with a clean cache.
 
+STEPS TO FIX:
+========================================
 
-═══════════════════════════════════════════════════════════════
-                        THE FIX
-═══════════════════════════════════════════════════════════════
+1. Go to: https://dashboard.render.com
 
-I've fixed the CORS configuration in the backend code.
+2. Click on your Web Service (backend)
 
-Now you need to restart the backend to apply the fix.
+3. Click "Manual Deploy" button
 
+4. Select "Clear build cache & deploy"
 
-═══════════════════════════════════════════════════════════════
-                    CLICK THIS FILE
-═══════════════════════════════════════════════════════════════
+5. Wait 5-10 minutes
 
-    ► FIX_CORS_NOW.bat
+6. Check logs for "Started SocialMessagingPlatformApplication"
 
-This will:
-1. Stop the backend
-2. Rebuild with the fix
-3. Start the backend
-4. Confirm it's working
+7. Test: https://your-backend.onrender.com/actuator/health
 
+IMPORTANT: Set These Environment Variables
+========================================
 
-═══════════════════════════════════════════════════════════════
-                    WHAT WAS FIXED
-═══════════════════════════════════════════════════════════════
+Go to Environment tab and add:
 
-✅ Created CorsConfig.java - Global CORS settings
-✅ Updated UserController - CORS headers
-✅ Updated FriendRequestController - CORS headers
-✅ Updated GroupController - CORS headers
-✅ Updated MessageController - CORS headers + REST endpoints
-✅ Fixed User model - Password hidden from responses
-✅ Fixed Message model - JSON serialization
-✅ Fixed FriendRequest model - JSON serialization
-✅ Fixed Group model - JSON serialization
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=<get from your PostgreSQL database>
+CORS_ALLOWED_ORIGINS=https://your-frontend.vercel.app
 
+To get database URL:
+- Click your PostgreSQL database
+- Scroll to "Connections"
+- Copy "Internal Database URL"
 
-═══════════════════════════════════════════════════════════════
-                    AFTER RESTART
-═══════════════════════════════════════════════════════════════
+AFTER BACKEND IS WORKING:
+========================================
 
-1. Go to: http://localhost:5173
-2. Try to login
-3. CORS error should be GONE! ✅
-4. Login should work! ✅
+Update Vercel:
+1. Go to Vercel Dashboard
+2. Settings → Environment Variables
+3. Update:
+   VITE_API_BASE_URL=https://your-backend.onrender.com
+   VITE_WS_BASE_URL=wss://your-backend.onrender.com
+4. Redeploy
 
+========================================
 
-═══════════════════════════════════════════════════════════════
-                    MORE INFO
-═══════════════════════════════════════════════════════════════
+For detailed instructions, see: QUICK_DEPLOY.md
 
-📄 CORS_FIX_SUMMARY.md - Detailed explanation
-📄 FIX_CORS_NOW.bat - Automated fix script
-
-
-═══════════════════════════════════════════════════════════════
-
-👉 NEXT STEP: Double-click FIX_CORS_NOW.bat
-
-═══════════════════════════════════════════════════════════════
+========================================
