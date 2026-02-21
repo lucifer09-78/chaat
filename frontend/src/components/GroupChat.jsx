@@ -23,7 +23,9 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
 
-    const date = new Date(timestamp);
+    // Backend returns UTC timestamps without 'Z' - force UTC parsing
+    const ts = timestamp.endsWith('Z') || timestamp.includes('+') ? timestamp : timestamp + 'Z';
+    const date = new Date(ts);
     const now = new Date();
     const diffDays = Math.floor((now - date) / 86400000);
 
@@ -104,8 +106,8 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
                   )}
                   <div
                     className={`px-5 py-3 rounded-2xl text-sm leading-relaxed ${isOwn
-                        ? 'bg-primary hover:bg-primary-dark text-white rounded-br-sm shadow-lg shadow-primary/20 transition-all'
-                        : 'message-incoming text-slate-200 rounded-bl-sm'
+                      ? 'bg-primary hover:bg-primary-dark text-white rounded-br-sm shadow-lg shadow-primary/20 transition-all'
+                      : 'message-incoming text-slate-200 rounded-bl-sm'
                       }`}
                   >
                     <p>{msg.content}</p>

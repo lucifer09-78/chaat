@@ -67,7 +67,9 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
 
-    const date = new Date(timestamp);
+    // Backend returns UTC timestamps without 'Z' - force UTC parsing
+    const ts = timestamp.endsWith('Z') || timestamp.includes('+') ? timestamp : timestamp + 'Z';
+    const date = new Date(ts);
     const now = new Date();
     const diffDays = Math.floor((now - date) / 86400000);
 
@@ -157,8 +159,8 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
                 <div className={`flex flex-col gap-1 ${isOwn ? 'items-end' : ''}`}>
                   <div
                     className={`p-4 rounded-2xl text-sm leading-relaxed ${isOwn
-                        ? 'bg-primary/90 text-white rounded-br-none shadow-[0_4px_20px_rgba(43,108,238,0.3)]'
-                        : 'glass-card text-slate-200 rounded-bl-none'
+                      ? 'bg-primary/90 text-white rounded-br-none shadow-[0_4px_20px_rgba(43,108,238,0.3)]'
+                      : 'glass-card text-slate-200 rounded-bl-none'
                       }`}
                   >
                     {msg.content}
