@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,8 +29,8 @@ public class UserService {
                 .filter(u -> u.getPassword().equals(password))
                 .orElseThrow(() -> new RuntimeException("Invalid username or password"));
         
-        // Update last seen timestamp
-        user.setLastSeen(LocalDateTime.now());
+        // Update last seen timestamp (UTC)
+        user.setLastSeen(LocalDateTime.now(ZoneOffset.UTC));
         userRepository.save(user);
         
         return user;
@@ -72,7 +73,7 @@ public class UserService {
     public void updateLastSeen(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setLastSeen(LocalDateTime.now());
+        user.setLastSeen(LocalDateTime.now(ZoneOffset.UTC));
         userRepository.save(user);
     }
 }

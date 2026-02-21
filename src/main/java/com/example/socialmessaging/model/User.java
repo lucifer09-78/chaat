@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "users")
@@ -44,7 +45,7 @@ public class User {
     @JsonProperty("isOnline")
     public boolean isOnline() {
         if (lastSeen == null) return false;
-        // Consider user online if last seen within 5 minutes
-        return lastSeen.isAfter(LocalDateTime.now().minusMinutes(5));
+        // Consider user online if last seen within 10 minutes (UTC)
+        return lastSeen.isAfter(LocalDateTime.now(ZoneOffset.UTC).minusMinutes(10));
     }
 }

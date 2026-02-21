@@ -36,11 +36,11 @@ export default function Chat() {
 
       const heartbeatInterval = setInterval(() => {
         userAPI.updatePresence(user.id).catch(() => { });
-      }, 120000);
+      }, 60000);  // 1 minute
 
       const refreshInterval = setInterval(() => {
         loadFriends();
-      }, 30000);
+      }, 15000); // 15 seconds
 
       return () => {
         clearInterval(heartbeatInterval);
