@@ -1,100 +1,53 @@
 @echo off
-cls
-echo ╔══════════════════════════════════════════════════════════════╗
-echo ║                                                              ║
-echo ║              🔧 FIXING CORS ERROR NOW 🔧                    ║
-echo ║                                                              ║
-echo ╚══════════════════════════════════════════════════════════════╝
+echo ========================================
+echo RENDER DEPLOYMENT FIX GUIDE
+echo ========================================
 echo.
-echo The error was: "blocked by CORS policy"
+echo Your code is correct! The issue is Render's build cache.
 echo.
-echo What was fixed:
-echo ✅ Created CorsConfig.java - Global CORS configuration
-echo ✅ Updated UserController - Added CORS headers
-echo ✅ Updated FriendRequestController - Added CORS headers
-echo ✅ Updated GroupController - Added CORS headers
-echo ✅ Updated MessageController - Added CORS headers + REST endpoints
-echo ✅ Fixed all entity models - JSON serialization
+echo FOLLOW THESE STEPS:
+echo ========================================
 echo.
-echo ════════════════════════════════════════════════════════════════
+echo 1. Open: https://dashboard.render.com
 echo.
-
-echo Step 1: Stopping containers...
-docker-compose down
-if %errorlevel% neq 0 (
-    echo ❌ Failed to stop containers
-    pause
-    exit /b 1
-)
-echo ✅ Containers stopped
+echo 2. Click your Web Service (backend)
 echo.
-
-echo Step 2: Rebuilding with new code...
-echo (This will take 1-2 minutes - compiling Java code)
+echo 3. Click "Manual Deploy" button
 echo.
-docker-compose up --build -d
-if %errorlevel% neq 0 (
-    echo ❌ Failed to build/start containers
-    pause
-    exit /b 1
-)
+echo 4. Select "Clear build cache & deploy"
 echo.
-
-echo Step 3: Waiting for backend to start...
+echo 5. Wait 5-10 minutes for build
 echo.
-timeout /t 10 /nobreak >nul
-
-:check_loop
-docker-compose logs app 2>nul | findstr "Started SocialMessagingApplication" >nul 2>&1
-if %errorlevel% equ 0 (
-    goto :success
-)
-
-docker-compose logs app 2>nul | findstr "ERROR" >nul 2>&1
-if %errorlevel% equ 0 (
-    echo.
-    echo ❌ Backend started with errors!
-    echo.
-    echo Showing last 30 lines of logs:
-    docker-compose logs --tail=30 app
-    echo.
-    echo Check the errors above.
-    pause
-    exit /b 1
-)
-
-echo Still starting... (waiting 5 more seconds)
-timeout /t 5 /nobreak >nul
-goto :check_loop
-
-:success
+echo ========================================
+echo ENVIRONMENT VARIABLES NEEDED:
+echo ========================================
 echo.
-echo ╔══════════════════════════════════════════════════════════════╗
-echo ║                                                              ║
-echo ║              ✅ BACKEND STARTED SUCCESSFULLY! ✅            ║
-echo ║                                                              ║
-echo ╚══════════════════════════════════════════════════════════════╝
+echo Go to Environment tab and set:
 echo.
-echo Backend is running on: http://localhost:8080
-echo Frontend should be on: http://localhost:5173
+echo SPRING_PROFILES_ACTIVE=prod
+echo SPRING_DATASOURCE_URL=(get from PostgreSQL database)
+echo CORS_ALLOWED_ORIGINS=https://your-frontend.vercel.app
 echo.
-echo ════════════════════════════════════════════════════════════════
-echo                    WHAT TO DO NOW
-echo ════════════════════════════════════════════════════════════════
+echo To get database URL:
+echo - Click PostgreSQL database in Render
+echo - Scroll to "Connections" section
+echo - Copy "Internal Database URL"
 echo.
-echo 1. Make sure frontend is running:
-echo    cd frontend
-echo    npm run dev
+echo ========================================
+echo AFTER BACKEND WORKS:
+echo ========================================
 echo.
-echo 2. Open browser: http://localhost:5173
+echo Test: https://your-backend.onrender.com/actuator/health
+echo Should return: {"status":"UP"}
 echo.
-echo 3. Try to login or register
+echo Then update Vercel:
+echo - Settings -^> Environment Variables
+echo - VITE_API_BASE_URL=https://your-backend.onrender.com
+echo - VITE_WS_BASE_URL=wss://your-backend.onrender.com
+echo - Redeploy
 echo.
-echo 4. CORS error should be FIXED! ✅
+echo ========================================
 echo.
-echo ════════════════════════════════════════════════════════════════
-echo.
-echo To view live logs:
-echo   docker-compose logs -f app
+echo See QUICK_DEPLOY.md for detailed instructions
 echo.
 pause
