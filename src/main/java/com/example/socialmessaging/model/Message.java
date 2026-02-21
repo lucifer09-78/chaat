@@ -48,6 +48,7 @@ public class Message {
     @Column(name = "reply_sender_name")
     private String replySenderName;     // Username of the person who sent the quoted msg
 
+    @Column(name = "edited", nullable = false, columnDefinition = "boolean default false")
     private boolean edited = false;     // Was this message edited?
 
     private LocalDateTime editedAt;
