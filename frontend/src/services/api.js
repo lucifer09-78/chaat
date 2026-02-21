@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = '';  // empty = relative, routed via Vite proxy
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -19,6 +19,15 @@ export const userAPI = {
   
   searchUsers: (username) => 
     api.get('/users/search', { params: { username } }),
+
+  updateUser: (userId, username, password) =>
+    api.put(`/users/update/${userId}`, { username, password }),
+
+  deleteUser: (userId) =>
+    api.delete(`/users/delete/${userId}`),
+
+  updatePresence: (userId) =>
+    api.post(`/users/heartbeat/${userId}`),
 };
 
 // Friend Request APIs
@@ -56,6 +65,36 @@ export const groupAPI = {
   
   getUserGroups: (userId) => 
     api.get(`/groups/list/${userId}`),
+
+  updateGroup: (groupId, name) =>
+    api.put(`/groups/update/${groupId}`, { name }),
+
+  leaveGroup: (groupId, userId) =>
+    api.delete(`/groups/leave/${groupId}/${userId}`),
+
+  deleteGroup: (groupId) =>
+    api.delete(`/groups/delete/${groupId}`),
+};
+
+// Message APIs
+export const messageAPI = {
+  getHistory: (userId, friendId) =>
+    api.get('/messages/history', { params: { userId, friendId } }),
+
+  getGroupHistory: (groupId) =>
+    api.get(`/messages/group/${groupId}`),
+
+  deletePrivateChat: (userId, friendId) =>
+    api.delete('/messages/delete/private', { params: { userId, friendId } }),
+
+  markAsDelivered: (messageId) =>
+    api.put(`/messages/delivered/${messageId}`),
+
+  markAsRead: (messageId) =>
+    api.put(`/messages/read/${messageId}`),
+
+  markAllAsRead: (userId, senderId) =>
+    api.put('/messages/read-all', null, { params: { userId, senderId } }),
 };
 
 export default api;

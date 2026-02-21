@@ -1,4 +1,4 @@
-@echo off
+:5174/users/login:1  Failed to load resource: the server responded with a status of 500 (I@echo off
 color 0A
 title Nexus Chat - Launcher
 cls

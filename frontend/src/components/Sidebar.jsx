@@ -1,13 +1,30 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ friends, groups, activeChat, onChatSelect, onShowFriendRequests, onShowCreateGroup }) {
+export default function Sidebar({ friends, groups, activeChat, onChatSelect, onShowFriendRequests, onShowCreateGroup, unreadCounts = {} }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const formatLastSeen = (lastSeenStr) => {
+    if (!lastSeenStr) return 'long ago';
+    
+    const lastSeen = new Date(lastSeenStr);
+    const now = new Date();
+    const diffMs = now - lastSeen;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return lastSeen.toLocaleDateString();
   };
 
   return (
@@ -55,12 +72,23 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold">
                 {friend.username.charAt(0).toUpperCase()}
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#101622] shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+              {friend.isOnline ? (
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#101622] shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+              ) : (
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-slate-500 rounded-full border-2 border-[#101622]"></div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-white truncate">{friend.username}</h3>
-              <p className="text-xs text-slate-400 truncate">Online</p>
+              <p className="text-xs text-slate-400 truncate">
+                {friend.isOnline ? 'Online' : friend.lastSeen ? `Last seen ${formatLastSeen(friend.lastSeen)}` : 'Offline'}
+              </p>
             </div>
+            {unreadCounts[friend.id] > 0 && (
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-xs font-bold text-white">{unreadCounts[friend.id]}</span>
+              </div>
+            )}
           </div>
         ))}
 
@@ -83,6 +111,11 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
               <h3 className="text-sm font-semibold text-white truncate">{group.name}</h3>
               <p className="text-xs text-slate-400 truncate">Group Chat</p>
             </div>
+            {unreadCounts[`group_${group.id}`] > 0 && (
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-xs font-bold text-white">{unreadCounts[`group_${group.id}`]}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -97,6 +130,13 @@ export default function Sidebar({ friends, groups, activeChat, onChatSelect, onS
             <p className="text-sm font-bold text-white leading-none">{user?.username}</p>
             <p className="text-xs text-slate-400 leading-none mt-1">Online</p>
           </div>
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-slate-400 hover:text-white transition-colors"
+            title="Profile & Settings"
+          >
+            <span className="material-symbols-outlined text-[20px]">settings</span>
+          </button>
           <button
             onClick={handleLogout}
             className="text-slate-400 hover:text-white transition-colors"

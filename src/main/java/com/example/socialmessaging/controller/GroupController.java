@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/groups")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class GroupController {
 
     @Autowired
@@ -44,5 +44,36 @@ public class GroupController {
     @GetMapping("/list/{userId}")
     public List<Group> getUserGroups(@PathVariable Long userId) {
         return groupService.getUserGroups(userId);
+    }
+
+    @PutMapping("/update/{groupId}")
+    public ResponseEntity<?> updateGroup(@PathVariable Long groupId, @RequestBody Map<String, String> payload) {
+        try {
+            String newName = payload.get("name");
+            Group group = groupService.updateGroupName(groupId, newName);
+            return ResponseEntity.ok(group);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/leave/{groupId}/{userId}")
+    public ResponseEntity<?> leaveGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+        try {
+            groupService.removeMember(groupId, userId);
+            return ResponseEntity.ok("Left group successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete/{groupId}")
+    public ResponseEntity<?> deleteGroup(@PathVariable Long groupId) {
+        try {
+            groupService.deleteGroup(groupId);
+            return ResponseEntity.ok("Group deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

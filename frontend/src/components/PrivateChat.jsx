@@ -1,5 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
 
+const MessageStatusIcon = ({ status }) => {
+  if (status === 'read') {
+    // Blue double tick
+    return (
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="none" className="inline-block ml-1">
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb"/>
+        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#53bdeb"/>
+      </svg>
+    );
+  } else if (status === 'delivered') {
+    // Gray double tick
+    return (
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="none" className="inline-block ml-1">
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95L3.53 4.072a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
+        <path d="M15.071.653a.75.75 0 0 0-1.06 0l-4.95 4.95-1.531-1.531a.75.75 0 0 0-1.06 1.06l2.06 2.061a.75.75 0 0 0 1.06 0l5.48-5.48a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
+      </svg>
+    );
+  } else {
+    // Gray single tick (sent)
+    return (
+      <svg width="12" height="11" viewBox="0 0 12 11" fill="none" className="inline-block ml-1">
+        <path d="M11.071.653a.75.75 0 0 0-1.06 0l-5.48 5.48-2.06-2.061a.75.75 0 0 0-1.06 1.06l2.59 2.591a.75.75 0 0 0 1.06 0l6.01-6.01a.75.75 0 0 0 0-1.06z" fill="#8696a0"/>
+      </svg>
+    );
+  }
+};
+
 export default function PrivateChat({ friend, messages, onSendMessage, currentUserId }) {
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -20,6 +47,54 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
     }
   };
 
+  const formatLastSeen = (lastSeenStr) => {
+    if (!lastSeenStr) return 'long ago';
+    
+    const lastSeen = new Date(lastSeenStr);
+    const now = new Date();
+    const diffMs = now - lastSeen;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return lastSeen.toLocaleDateString();
+  };
+
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / 86400000);
+    
+    // If today, show time only
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // If yesterday
+    if (diffDays === 1) {
+      return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // If within a week, show day name
+    if (diffDays < 7) {
+      return `${date.toLocaleDateString([], { weekday: 'short' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // Otherwise show full date
+    return date.toLocaleString([], { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   return (
     <main className="flex-1 flex flex-col relative min-w-0">
       {/* Chat Header */}
@@ -29,13 +104,25 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)]">
               {friend.username.charAt(0).toUpperCase()}
             </div>
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#101622]"></div>
+            {friend.isOnline ? (
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#101622] animate-pulse"></div>
+            ) : (
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-500 rounded-full border-2 border-[#101622]"></div>
+            )}
           </div>
           <div>
             <h2 className="text-lg font-bold text-white leading-tight">{friend.username}</h2>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-xs text-primary font-medium tracking-wide uppercase">Online</span>
+              {friend.isOnline ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="text-xs text-primary font-medium tracking-wide uppercase">Online</span>
+                </>
+              ) : (
+                <span className="text-xs text-slate-400">
+                  {friend.lastSeen ? `Last seen ${formatLastSeen(friend.lastSeen)}` : 'Offline'}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -70,8 +157,9 @@ export default function PrivateChat({ friend, messages, onSendMessage, currentUs
                   >
                     {msg.content}
                   </div>
-                  <span className="text-[10px] text-slate-500 ml-2">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span className="text-[10px] text-slate-500 ml-2 flex items-center gap-1">
+                    {formatMessageTime(msg.timestamp)}
+                    {isOwn && <MessageStatusIcon status={msg.status || 'sent'} />}
                   </span>
                 </div>
               </div>

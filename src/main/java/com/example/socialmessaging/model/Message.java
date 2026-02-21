@@ -1,5 +1,6 @@
 package com.example.socialmessaging.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,9 +35,20 @@ public class Message {
     @CreationTimestamp
     private LocalDateTime timestamp;
 
+    private LocalDateTime deliveredAt;
+    
+    private LocalDateTime readAt;
+
     public Message(User sender, User receiver, String content) {
         this.sender = sender;
         this.receiver = receiver;
         this.content = content;
+    }
+    
+    @JsonProperty("status")
+    public String getStatus() {
+        if (readAt != null) return "read";
+        if (deliveredAt != null) return "delivered";
+        return "sent";
     }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { friendAPI, groupAPI } from '../services/api';
+import { friendAPI, groupAPI, messageAPI, userAPI } from '../services/api';
 import websocketService from '../services/websocket';
 import PrivateChat from '../components/PrivateChat';
 import GroupChat from '../components/GroupChat';
@@ -17,7 +17,18 @@ export default function Chat() {
   const [messages, setMessages] = useState({});
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const wsInitialized = useRef(false);
+  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        setNotificationPermission(permission);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (user && !wsInitialized.current) {
@@ -25,15 +36,25 @@ export default function Chat() {
       loadGroups();
       initializeWebSocket();
       wsInitialized.current = true;
-    }
 
-    // Don't disconnect on unmount - keep connection alive
-    // return () => {
-    //   if (wsInitialized.current) {
-    //     websocketService.disconnect();
-    //     wsInitialized.current = false;
-    //   }
-    // };
+      // Send heartbeat every 2 minutes to update presence
+      const heartbeatInterval = setInterval(() => {
+        userAPI.updatePresence(user.id).catch(err => {
+          console.error('Failed to update presence:', err);
+        });
+      }, 120000); // 2 minutes
+
+      // Refresh friends list every 30 seconds to update online status
+      const refreshInterval = setInterval(() => {
+        loadFriends();
+      }, 30000); // 30 seconds
+
+      // Cleanup
+      return () => {
+        clearInterval(heartbeatInterval);
+        clearInterval(refreshInterval);
+      };
+    }
   }, [user]);
 
   const loadFriends = async () => {
@@ -59,22 +80,129 @@ export default function Chat() {
   };
 
   const handleMessageReceived = (message, type) => {
-    const chatId = type === 'private' 
-      ? (message.sender?.id === user.id ? message.receiver?.id : message.sender?.id)
-      : message.groupId;
+    console.log('📨 Message received:', { message, type });
+    
+    let chatKey;
+    let senderName;
+    
+    if (type === 'private') {
+      // For private messages, use the other person's ID
+      const peerId = message.sender?.id === user.id ? message.receiver?.id : message.sender?.id;
+      chatKey = `private_${peerId}`;
+      senderName = message.sender?.username;
+      
+      // Update unread count if message is from someone else
+      if (message.sender?.id !== user.id) {
+        setUnreadCounts(prev => ({
+          ...prev,
+          [peerId]: (prev[peerId] || 0) + 1
+        }));
+      }
+    } else {
+      // For group messages, use the group ID
+      chatKey = `group_${message.groupId}`;
+      senderName = message.sender?.username;
+      
+      // Update unread count for group
+      if (message.sender?.id !== user.id) {
+        setUnreadCounts(prev => ({
+          ...prev,
+          [`group_${message.groupId}`]: (prev[`group_${message.groupId}`] || 0) + 1
+        }));
+      }
+    }
+    
+    console.log('💾 Storing message in key:', chatKey);
     
     setMessages(prev => ({
       ...prev,
-      [chatId]: [...(prev[chatId] || []), message]
+      [chatKey]: [...(prev[chatKey] || []), message]
     }));
+
+    // Mark as delivered immediately
+    if (message.id && message.sender?.id !== user.id) {
+      messageAPI.markAsDelivered(message.id).catch(err => {
+        console.error('Failed to mark as delivered:', err);
+      });
+    }
+
+    // Show notification if message is from someone else and window is not focused
+    if (message.sender?.id !== user.id && (!document.hasFocus() || activeChat?.id !== (type === 'private' ? message.sender?.id : message.groupId))) {
+      showNotification(senderName, message.content, type);
+    }
   };
 
-  const handleChatSelect = (chat, type) => {
+  const showNotification = (senderName, content, type) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notification = new Notification(`New message from ${senderName}`, {
+        body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+        icon: '/vite.svg',
+        badge: '/vite.svg',
+        tag: `message-${senderName}`,
+        requireInteraction: false,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      // Auto close after 5 seconds
+      setTimeout(() => notification.close(), 5000);
+    }
+  };
+
+  const handleChatSelect = async (chat, type) => {
+    console.log('💬 Chat selected:', { chat, type });
     setActiveChat(chat);
     setChatType(type);
     
-    if (type === 'group' && !messages[chat.id]) {
-      websocketService.subscribeToGroup(chat.id, handleMessageReceived);
+    const chatKey = type === 'private' ? `private_${chat.id}` : `group_${chat.id}`;
+    console.log('🔑 Chat key:', chatKey);
+    
+    // Clear unread count for this chat
+    if (type === 'private') {
+      setUnreadCounts(prev => ({ ...prev, [chat.id]: 0 }));
+      // Mark all messages from this friend as read
+      await messageAPI.markAllAsRead(user.id, chat.id).catch(err => {
+        console.error('Failed to mark messages as read:', err);
+      });
+    } else {
+      setUnreadCounts(prev => ({ ...prev, [`group_${chat.id}`]: 0 }));
+    }
+    
+    // Load message history from backend if not already loaded
+    if (!messages[chatKey]) {
+      try {
+        console.log('📥 Loading message history from backend...');
+        if (type === 'private') {
+          const response = await messageAPI.getHistory(user.id, chat.id);
+          console.log('✅ Loaded', response.data.length, 'private messages');
+          setMessages(prev => ({
+            ...prev,
+            [chatKey]: response.data
+          }));
+        } else if (type === 'group') {
+          const response = await messageAPI.getGroupHistory(chat.id);
+          console.log('✅ Loaded', response.data.length, 'group messages');
+          setMessages(prev => ({
+            ...prev,
+            [chatKey]: response.data
+          }));
+          // Subscribe to group for new messages
+          console.log('📡 Subscribing to group:', chat.id);
+          websocketService.subscribeToGroup(chat.id, handleMessageReceived);
+        }
+      } catch (error) {
+        console.error('❌ Error loading message history:', error);
+      }
+    } else {
+      console.log('📦 Using cached messages:', messages[chatKey].length, 'messages');
+      // Still subscribe to group if it's a group chat
+      if (type === 'group') {
+        console.log('📡 Subscribing to group:', chat.id);
+        websocketService.subscribeToGroup(chat.id, handleMessageReceived);
+      }
     }
   };
 
@@ -109,6 +237,7 @@ export default function Chat() {
           onChatSelect={handleChatSelect}
           onShowFriendRequests={() => setShowFriendRequests(true)}
           onShowCreateGroup={() => setShowCreateGroup(true)}
+          unreadCounts={unreadCounts}
         />
 
         {/* Main Chat Area */}
@@ -116,14 +245,14 @@ export default function Chat() {
           chatType === 'private' ? (
             <PrivateChat
               friend={activeChat}
-              messages={messages[activeChat.id] || []}
+              messages={messages[`private_${activeChat.id}`] || []}
               onSendMessage={handleSendMessage}
               currentUserId={user.id}
             />
           ) : (
             <GroupChat
               group={activeChat}
-              messages={messages[activeChat.id] || []}
+              messages={messages[`group_${activeChat.id}`] || []}
               onSendMessage={handleSendMessage}
               currentUserId={user.id}
             />

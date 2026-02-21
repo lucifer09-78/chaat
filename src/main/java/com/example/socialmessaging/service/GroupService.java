@@ -40,4 +40,27 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return groupRepository.findByMembersContaining(user);
     }
+
+    public Group updateGroupName(Long groupId, String newName) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        group.setName(newName);
+        return groupRepository.save(group);
+    }
+
+    public void removeMember(Long groupId, Long userId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        group.getMembers().remove(user);
+        groupRepository.save(group);
+    }
+
+    public void deleteGroup(Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        groupRepository.delete(group);
+    }
 }

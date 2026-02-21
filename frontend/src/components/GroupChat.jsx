@@ -20,6 +20,37 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
     }
   };
 
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / 86400000);
+    
+    // If today, show time only
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // If yesterday
+    if (diffDays === 1) {
+      return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // If within a week, show day name
+    if (diffDays < 7) {
+      return `${date.toLocaleDateString([], { weekday: 'short' })} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // Otherwise show full date
+    return date.toLocaleString([], { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   return (
     <main className="flex-1 flex flex-col glass-panel rounded-2xl h-full overflow-hidden relative">
       {/* Chat Header */}
@@ -74,7 +105,7 @@ export default function GroupChat({ group, messages, onSendMessage, currentUserI
                     <p>{msg.content}</p>
                   </div>
                   <span className="text-[11px] text-slate-500 font-medium pl-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatMessageTime(msg.timestamp)}
                   </span>
                 </div>
               </div>
