@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '';  // empty = relative, routed via Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';  // set VITE_API_URL on Vercel to point to Render backend
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,13 +11,13 @@ const api = axios.create({
 
 // User APIs
 export const userAPI = {
-  register: (username, password) => 
+  register: (username, password) =>
     api.post('/users/register', { username, password }),
-  
-  login: (username, password) => 
+
+  login: (username, password) =>
     api.post('/users/login', { username, password }),
-  
-  searchUsers: (username) => 
+
+  searchUsers: (username) =>
     api.get('/users/search', { params: { username } }),
 
   updateUser: (userId, username, password) =>
@@ -32,25 +32,25 @@ export const userAPI = {
 
 // Friend Request APIs
 export const friendAPI = {
-  sendRequest: (senderId, receiverId) => 
+  sendRequest: (senderId, receiverId) =>
     api.post(`/friends/request/${senderId}/${receiverId}`),
-  
-  acceptRequest: (requestId) => 
+
+  acceptRequest: (requestId) =>
     api.put(`/friends/respond/${requestId}`, null, { params: { accept: true } }),
-  
-  rejectRequest: (requestId) => 
+
+  rejectRequest: (requestId) =>
     api.put(`/friends/respond/${requestId}`, null, { params: { accept: false } }),
-  
-  getPendingRequests: (userId) => 
+
+  getPendingRequests: (userId) =>
     api.get(`/friends/pending/${userId}`),
-  
-  getFriends: (userId) => 
+
+  getFriends: (userId) =>
     api.get(`/friends/list/${userId}`),
 };
 
 // Group APIs
 export const groupAPI = {
-  createGroup: (name, createdBy, memberIds) => 
+  createGroup: (name, createdBy, memberIds) =>
     api.post('/groups/create', { name, createdBy }).then(async (response) => {
       // Add members to the group
       const group = response.data;
@@ -59,11 +59,11 @@ export const groupAPI = {
       }
       return response;
     }),
-  
-  addMember: (groupId, userId) => 
+
+  addMember: (groupId, userId) =>
     api.post('/groups/add-member', { groupId, userId }),
-  
-  getUserGroups: (userId) => 
+
+  getUserGroups: (userId) =>
     api.get(`/groups/list/${userId}`),
 
   updateGroup: (groupId, name) =>
